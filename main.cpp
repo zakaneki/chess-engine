@@ -1,14 +1,11 @@
-    #include <iostream>
-    #include <vector>
-    #include <string>
-    #include <random>
-    #include <ctime>
-    #include <cmath>
-    #include <algorithm>
-    #ifdef _WIN32
-    #include <windows.h>
-    #endif
-    #include <unordered_map>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <random>
+#include <ctime>
+#include <cmath>
+#include <algorithm>
+#include <unordered_map>
 #include <sstream>
 #include <chrono>
 #include <atomic>
@@ -164,6 +161,7 @@
     class ChessEngine {
 
     public:
+        std::vector<Move> moveHistory; // To keep track of moves made
         // In your ChessEngine class
         uint64_t nodesSearched;
         std::chrono::steady_clock::time_point searchStartTime;
@@ -524,35 +522,207 @@
 
 
 
+        // void makeMove(Move& move) {
+        //     Piece movedPiece = board[move.fromRow][move.fromCol];
+        //     move.capturedPiece = board[move.toRow][move.toCol];  // Store captured piece
+
+        //     // Update hash: Remove the piece from the from-square
+        //     currentHash ^= zobristTable[movedPiece][move.fromRow][move.fromCol];
+
+        //     // Update hash: Remove the captured piece from the to-square (if any)
+        //     if (move.capturedPiece != EMPTY) {
+        //         currentHash ^= zobristTable[move.capturedPiece][move.toRow][move.toCol];
+        //     }
+
+        //     // Update en passant hash (if applicable)
+        //     if (enPassantCol != -1) {
+        //         currentHash ^= zobristEnPassant[enPassantCol];
+        //     }
+
+        //     enPassantHistory.push_back(enPassantCol);
+        //     enPassantCol = -1;
+
+        //     board[move.toRow][move.toCol] = movedPiece;
+        //     board[move.fromRow][move.fromCol] = EMPTY;
+
+        //     // Update hash: Add the piece to the to-square
+        //     currentHash ^= zobristTable[movedPiece][move.toRow][move.toCol];
+
+
+        //     capturedPieces.push_back(move.capturedPiece);  // Keep track of captured pieces
+        //     //enPassantHistory.push_back(enPassantCol);      // Keep track of enPassantCol
+        //     castlingRights.push_back(whiteKingMoved);
+        //     castlingRights.push_back(blackKingMoved);
+        //     castlingRights.push_back(whiteKingsideRookMoved);
+        //     castlingRights.push_back(whiteQueensideRookMoved);
+        //     castlingRights.push_back(blackKingsideRookMoved);
+        //     castlingRights.push_back(blackQueensideRookMoved);
+
+        //     //enPassantCol = -1;
+
+        //     // Handle special moves
+        //     if (move.isEnPassant) {
+        //         board[move.fromRow][move.toCol] = EMPTY;
+        //     } else if (move.isCastling) {
+        //         int rookFromCol = (move.toCol > move.fromCol) ? 7 : 0;
+        //         int rookToCol = (move.toCol > move.fromCol) ? 5 : 3;
+        //         board[move.toRow][rookToCol] = board[move.toRow][rookFromCol];
+        //         board[move.toRow][rookFromCol] = EMPTY;
+        //     } else if (move.isPromotion) {
+        //         board[move.toRow][move.toCol] = move.promotionPiece;
+        //     }
+
+        //     // **Check if a pawn moved two squares forward and update enPassantCol**
+        //     if (movedPiece == WPAWN && move.fromRow == 1 && move.toRow == 3) {
+        //         enPassantCol = move.fromCol; // White pawn moved two spaces
+        //     } else if (movedPiece == BPAWN && move.fromRow == 6 && move.toRow == 4) {
+        //         enPassantCol = move.fromCol; // Black pawn moved two spaces
+        //     }
+        //     // Update castling rights hash
+        //     int castlingKeyBefore = getCastlingRightsKey();
+
+        //     // Update castling rights
+        //     if (movedPiece == WKING) whiteKingMoved = true;
+        //     if (movedPiece == BKING) blackKingMoved = true;
+        //     if (movedPiece == WROOK) {
+        //         if (move.fromCol == 0) whiteQueensideRookMoved = true;
+        //         if (move.fromCol == 7) whiteKingsideRookMoved = true;
+        //     }
+        //     if (movedPiece == BROOK) {
+        //         if (move.fromCol == 0) blackQueensideRookMoved = true;
+        //         if (move.fromCol == 7) blackKingsideRookMoved = true;
+        //     }
+        //     int castlingKeyAfter = getCastlingRightsKey();
+        //     if (castlingKeyBefore != castlingKeyAfter) {
+        //         currentHash ^= zobristCastlingRights[castlingKeyBefore];
+        //         currentHash ^= zobristCastlingRights[castlingKeyAfter];
+        //     }
+        //     // XOR side to move
+        //     currentHash ^= zobristBlackToMove;
+        //     isWhiteTurn = !isWhiteTurn;
+        // }
+        // void undoMove(Move& move) {
+        //     isWhiteTurn = !isWhiteTurn;  // Toggle back the turn
+        //     // XOR side to move (since we toggled isWhiteTurn)
+        //     currentHash ^= zobristBlackToMove;
+
+        //     // Restore enPassantCol
+        //     int enPassantColAfter = enPassantCol;
+        //     enPassantCol = enPassantHistory.back();
+        //     enPassantHistory.pop_back();
+        //     int enPassantColBefore = enPassantCol;
+
+        //     // Update en passant hash
+        //     if (enPassantColAfter != -1) {
+        //         currentHash ^= zobristEnPassant[enPassantColAfter];
+        //     }
+        //     if (enPassantColBefore != -1) {
+        //         currentHash ^= zobristEnPassant[enPassantColBefore];
+        //     }
+
+        //     // Restore castling rights
+        //     int castlingKeyAfter = getCastlingRightsKey();
+        //     // Restore castling rights
+        //     blackQueensideRookMoved = castlingRights.back(); castlingRights.pop_back();
+        //     blackKingsideRookMoved = castlingRights.back(); castlingRights.pop_back();
+        //     whiteQueensideRookMoved = castlingRights.back(); castlingRights.pop_back();
+        //     whiteKingsideRookMoved = castlingRights.back(); castlingRights.pop_back();
+        //     blackKingMoved = castlingRights.back(); castlingRights.pop_back();
+        //     whiteKingMoved = castlingRights.back(); castlingRights.pop_back();
+        //     int castlingKeyBefore = getCastlingRightsKey();
+
+        //     // Update castling rights hash
+        //     if (castlingKeyBefore != castlingKeyAfter) {
+        //         currentHash ^= zobristCastlingRights[castlingKeyAfter];
+        //         currentHash ^= zobristCastlingRights[castlingKeyBefore];
+        //     }
+        //     // Restore enPassantCol
+        //     //enPassantCol = enPassantHistory.back(); enPassantHistory.pop_back();
+
+        //     // Undo special moves
+        //     if (move.isPromotion) {
+        //         // Update hash: Remove the promoted piece from the to-square
+        //         currentHash ^= zobristTable[board[move.toRow][move.toCol]][move.toRow][move.toCol];
+
+        //         // Revert to pawn
+        //         board[move.toRow][move.toCol] = isWhiteTurn ? WPAWN : BPAWN;
+
+        //         // Update hash: Add the pawn back to the to-square
+        //         currentHash ^= zobristTable[board[move.toRow][move.toCol]][move.toRow][move.toCol];
+        //     } else if (move.isEnPassant) {
+        //         int capturedPawnRow = isWhiteTurn ? move.toRow - 1 : move.toRow + 1;
+        //         Piece capturedPawn = isWhiteTurn ? BPAWN : WPAWN;
+        //         board[capturedPawnRow][move.toCol] = capturedPawn;
+
+        //         // Update hash for the restored pawn
+        //         currentHash ^= zobristTable[capturedPawn][capturedPawnRow][move.toCol];
+        //     } else if (move.isCastling) {
+        //         int rookFromCol = (move.toCol > move.fromCol) ? 7 : 0;
+        //         int rookToCol = (move.toCol > move.fromCol) ? 5 : 3;
+
+        //         // Move the rook back to its original position
+        //         Piece rook = board[move.toRow][rookToCol];
+        //         board[move.toRow][rookFromCol] = rook;
+        //         board[move.toRow][rookToCol] = EMPTY;
+
+        //         // Update hash for rook move
+        //         currentHash ^= zobristTable[rook][move.toRow][rookToCol];   // Remove rook from rookToCol
+        //         currentHash ^= zobristTable[rook][move.toRow][rookFromCol]; // Place rook back to rookFromCol
+        //     }
+        //     // Undo the move
+        //     Piece movedPiece = board[move.toRow][move.toCol];
+
+        //     // Update hash: Remove the moved piece from the to-square
+        //     currentHash ^= zobristTable[movedPiece][move.toRow][move.toCol];
+
+        //     // Update hash: Place the moved piece back to the from-square
+        //     currentHash ^= zobristTable[movedPiece][move.fromRow][move.fromCol];
+
+        //     board[move.fromRow][move.fromCol] = movedPiece;
+
+        //     // Restore the captured piece (if any)
+        //     if (move.capturedPiece != EMPTY) {
+        //         board[move.toRow][move.toCol] = move.capturedPiece;
+
+        //         // Update hash for the restored captured piece
+        //         currentHash ^= zobristTable[move.capturedPiece][move.toRow][move.toCol];
+        //     } else {
+        //         board[move.toRow][move.toCol] = EMPTY;
+        //     }
+        // }
+
+// ...existing code...
         void makeMove(Move& move) {
+            moveHistory.push_back(move); // Store the move in history
             Piece movedPiece = board[move.fromRow][move.fromCol];
-            move.capturedPiece = board[move.toRow][move.toCol];  // Store captured piece
+            Piece pieceOnToSquare = board[move.toRow][move.toCol]; // Piece on destination before move
 
-            // Update hash: Remove the piece from the from-square
-            currentHash ^= zobristTable[movedPiece][move.fromRow][move.fromCol];
+            // --- HASH UPDATES FOR OLD STATE (XORing out) ---
+            // 1. Side to move (will be flipped by XORing again later)
+            currentHash ^= zobristBlackToMove;
 
-            // Update hash: Remove the captured piece from the to-square (if any)
-            if (move.capturedPiece != EMPTY) {
-                currentHash ^= zobristTable[move.capturedPiece][move.toRow][move.toCol];
-            }
+            // 2. Castling rights (before they change due to this move)
+            int castlingKeyBefore = getCastlingRightsKey();
+            currentHash ^= zobristCastlingRights[castlingKeyBefore];
 
-            // Update en passant hash (if applicable)
+            // 3. En passant square (if one exists)
+            enPassantHistory.push_back(enPassantCol); // Store for undo
             if (enPassantCol != -1) {
                 currentHash ^= zobristEnPassant[enPassantCol];
             }
 
-            enPassantHistory.push_back(enPassantCol);
-            enPassantCol = -1;
+            // 4. Piece being moved from its original square
+            currentHash ^= zobristTable[movedPiece][move.fromRow][move.fromCol];
 
-            board[move.toRow][move.toCol] = movedPiece;
-            board[move.fromRow][move.fromCol] = EMPTY;
-
-            // Update hash: Add the piece to the to-square
-            currentHash ^= zobristTable[movedPiece][move.toRow][move.toCol];
-
-
-            capturedPieces.push_back(move.capturedPiece);  // Keep track of captured pieces
-            //enPassantHistory.push_back(enPassantCol);      // Keep track of enPassantCol
+            // 5. Captured piece (if it's a standard capture)
+            // For en-passant, pieceOnToSquare is EMPTY. Actual captured pawn handled later.
+            if (pieceOnToSquare != EMPTY && !move.isEnPassant) {
+                currentHash ^= zobristTable[pieceOnToSquare][move.toRow][move.toCol];
+            }
+            move.capturedPiece = pieceOnToSquare; // Store captured piece for later use
+            // --- PERFORM BOARD STATE CHANGES ---
+            // Store history for undo
+            capturedPieces.push_back(move.capturedPiece); // Ensure move.capturedPiece is correctly set
             castlingRights.push_back(whiteKingMoved);
             castlingRights.push_back(blackKingMoved);
             castlingRights.push_back(whiteKingsideRookMoved);
@@ -560,140 +730,198 @@
             castlingRights.push_back(blackKingsideRookMoved);
             castlingRights.push_back(blackQueensideRookMoved);
 
-            //enPassantCol = -1;
+            // Move the piece
+            board[move.toRow][move.toCol] = movedPiece;
+            board[move.fromRow][move.fromCol] = EMPTY;
 
-            // Handle special moves
+            Piece finalPieceOnToSquare = movedPiece; // This will be the piece XORed in at toSquare
+
+            // Handle special move board updates & their specific hash components
             if (move.isEnPassant) {
-                board[move.fromRow][move.toCol] = EMPTY;
+                Piece actualCapturedPawn = (movedPiece == WPAWN) ? BPAWN : WPAWN;
+                int capturedPawnActualRow = move.fromRow; // Same row as capturing pawn
+                int capturedPawnActualCol = move.toCol;   // Same col as target square (where capturing pawn lands)
+                
+                board[capturedPawnActualRow][capturedPawnActualCol] = EMPTY; // Remove the captured pawn
+
+                // Hash: XOR out the actual en-passant captured pawn
+                currentHash ^= zobristTable[actualCapturedPawn][capturedPawnActualRow][capturedPawnActualCol];
             } else if (move.isCastling) {
-                int rookFromCol = (move.toCol > move.fromCol) ? 7 : 0;
-                int rookToCol = (move.toCol > move.fromCol) ? 5 : 3;
-                board[move.toRow][rookToCol] = board[move.toRow][rookFromCol];
-                board[move.toRow][rookFromCol] = EMPTY;
+                Piece rookPieceType;
+                int rookOriginalCol, rookFinalCol;
+
+                if (move.toCol > move.fromCol) { // Kingside castling
+                    rookOriginalCol = 7; rookFinalCol = 5;
+                } else { // Queenside castling
+                    rookOriginalCol = 0; rookFinalCol = 3;
+                }
+                // Determine rook type based on whose turn it is (isWhiteTurn is BEFORE flip)
+                rookPieceType = isWhiteTurn ? WROOK : BROOK;
+
+                // Board update for rook
+                board[move.fromRow][rookFinalCol] = rookPieceType;
+                board[move.fromRow][rookOriginalCol] = EMPTY;
+
+                // Hash: XOR out rook from original square, XOR in to new square
+                currentHash ^= zobristTable[rookPieceType][move.fromRow][rookOriginalCol];
+                currentHash ^= zobristTable[rookPieceType][move.fromRow][rookFinalCol];
             } else if (move.isPromotion) {
+                // The pawn (movedPiece) is already on board[move.toRow][move.toCol]
+                // We need to XOR out the pawn from toSquare before XORing in the promoted piece
+                currentHash ^= zobristTable[movedPiece][move.toRow][move.toCol]; // XOR out pawn from toSquare
+
                 board[move.toRow][move.toCol] = move.promotionPiece;
+                finalPieceOnToSquare = move.promotionPiece; // This is what will be XORed in as the main piece on toSquare
             }
 
-            // **Check if a pawn moved two squares forward and update enPassantCol**
+            // --- HASH UPDATES FOR NEW STATE (XORing in) ---
+            // 6. Piece on the 'to' square (either the moved piece or promoted piece)
+            currentHash ^= zobristTable[finalPieceOnToSquare][move.toRow][move.toCol];
+
+            // 7. Update enPassantCol for next turn & its hash
+            enPassantCol = -1; // Reset, then set if applicable
             if (movedPiece == WPAWN && move.fromRow == 1 && move.toRow == 3) {
-                enPassantCol = move.fromCol; // White pawn moved two spaces
+                enPassantCol = move.fromCol;
             } else if (movedPiece == BPAWN && move.fromRow == 6 && move.toRow == 4) {
-                enPassantCol = move.fromCol; // Black pawn moved two spaces
+                enPassantCol = move.fromCol;
             }
-            // Update castling rights hash
-            int castlingKeyBefore = getCastlingRightsKey();
+            if (enPassantCol != -1) {
+                currentHash ^= zobristEnPassant[enPassantCol];
+            }
 
-            // Update castling rights
+            // 8. Update castling flags
             if (movedPiece == WKING) whiteKingMoved = true;
-            if (movedPiece == BKING) blackKingMoved = true;
-            if (movedPiece == WROOK) {
-                if (move.fromCol == 0) whiteQueensideRookMoved = true;
-                if (move.fromCol == 7) whiteKingsideRookMoved = true;
+            else if (movedPiece == BKING) blackKingMoved = true;
+            else if (movedPiece == WROOK) {
+                if (move.fromRow == 0 && move.fromCol == 0) whiteQueensideRookMoved = true;
+                else if (move.fromRow == 0 && move.fromCol == 7) whiteKingsideRookMoved = true;
             }
-            if (movedPiece == BROOK) {
-                if (move.fromCol == 0) blackQueensideRookMoved = true;
-                if (move.fromCol == 7) blackKingsideRookMoved = true;
+            else if (movedPiece == BROOK) {
+                if (move.fromRow == 7 && move.fromCol == 0) blackQueensideRookMoved = true;
+                else if (move.fromRow == 7 && move.fromCol == 7) blackKingsideRookMoved = true;
             }
+            // If a rook is captured, update its side's castling rights
+            if (move.capturedPiece == WROOK) {
+                if (move.toRow == 0 && move.toCol == 0) whiteQueensideRookMoved = true; // Rook at a1 captured
+                else if (move.toRow == 0 && move.toCol == 7) whiteKingsideRookMoved = true; // Rook at h1 captured
+            }
+            else if (move.capturedPiece == BROOK) {
+                if (move.toRow == 7 && move.toCol == 0) blackQueensideRookMoved = true; // Rook at a8 captured
+                else if (move.toRow == 7 && move.toCol == 7) blackKingsideRookMoved = true; // Rook at h8 captured
+            }
+            
             int castlingKeyAfter = getCastlingRightsKey();
-            if (castlingKeyBefore != castlingKeyAfter) {
-                currentHash ^= zobristCastlingRights[castlingKeyBefore];
-                currentHash ^= zobristCastlingRights[castlingKeyAfter];
-            }
-            // XOR side to move
-            currentHash ^= zobristBlackToMove;
+            currentHash ^= zobristCastlingRights[castlingKeyAfter];
+
+            // 9. Side to move is already handled by the initial XOR and isWhiteTurn flip
             isWhiteTurn = !isWhiteTurn;
         }
+// ...existing code...
         void undoMove(Move& move) {
-            isWhiteTurn = !isWhiteTurn;  // Toggle back the turn
-            // XOR side to move (since we toggled isWhiteTurn)
-            currentHash ^= zobristBlackToMove;
+            moveHistory.pop_back(); // Remove the last move from history
+            // --- REVERT SIDE TO MOVE FIRST ---
+            isWhiteTurn = !isWhiteTurn;
+            currentHash ^= zobristBlackToMove; // XOR to flip side to move contribution
 
-            // Restore enPassantCol
-            int enPassantColAfter = enPassantCol;
-            enPassantCol = enPassantHistory.back();
-            enPassantHistory.pop_back();
-            int enPassantColBefore = enPassantCol;
+            // --- UNDO HASHING & BOARD STATE FOR NEW STATE OF MAKE MOVE (XORing out new state items) ---
+            // 1. New Castling Rights (from end of makeMove)
+            int castlingKeyAfterMakeMove = getCastlingRightsKey(); // This is the state *before* restoring flags
+            currentHash ^= zobristCastlingRights[castlingKeyAfterMakeMove];
 
-            // Update en passant hash
-            if (enPassantColAfter != -1) {
-                currentHash ^= zobristEnPassant[enPassantColAfter];
-            }
-            if (enPassantColBefore != -1) {
-                currentHash ^= zobristEnPassant[enPassantColBefore];
+            // 2. New En Passant Square (from end of makeMove)
+            // Note: enPassantCol is currently the one set by makeMove
+            if (enPassantCol != -1) {
+                currentHash ^= zobristEnPassant[enPassantCol];
             }
 
-            // Restore castling rights
-            int castlingKeyAfter = getCastlingRightsKey();
-            // Restore castling rights
+            // --- RESTORE BOARD FLAGS & PIECES (in reverse order of makeMove) ---
+            // Restore castling flags from history
             blackQueensideRookMoved = castlingRights.back(); castlingRights.pop_back();
             blackKingsideRookMoved = castlingRights.back(); castlingRights.pop_back();
             whiteQueensideRookMoved = castlingRights.back(); castlingRights.pop_back();
             whiteKingsideRookMoved = castlingRights.back(); castlingRights.pop_back();
             blackKingMoved = castlingRights.back(); castlingRights.pop_back();
             whiteKingMoved = castlingRights.back(); castlingRights.pop_back();
-            int castlingKeyBefore = getCastlingRightsKey();
 
-            // Update castling rights hash
-            if (castlingKeyBefore != castlingKeyAfter) {
-                currentHash ^= zobristCastlingRights[castlingKeyAfter];
-                currentHash ^= zobristCastlingRights[castlingKeyBefore];
-            }
-            // Restore enPassantCol
-            //enPassantCol = enPassantHistory.back(); enPassantHistory.pop_back();
+            // Restore enPassantCol from history
+            enPassantCol = enPassantHistory.back(); enPassantHistory.pop_back();
 
-            // Undo special moves
+
+            Piece pieceThatMoved = board[move.toRow][move.toCol]; // This is the piece after promotion, if any
+
+            // 3. Piece on 'to' square (XOR out what was added at end of makeMove)
+            currentHash ^= zobristTable[pieceThatMoved][move.toRow][move.toCol];
+
+
+            // --- UNDO BOARD CHANGES & SPECIAL MOVES HASHING ---
+            move.capturedPiece = capturedPieces.back(); // Get the last captured piece from history
+            // Revert general move
+            board[move.fromRow][move.fromCol] = (move.isPromotion ? (isWhiteTurn ? WPAWN : BPAWN) : pieceThatMoved);
+            if(!move.isEnPassant) board[move.toRow][move.toCol] = move.capturedPiece; // Restore captured piece or EMPTY
+
             if (move.isPromotion) {
-                // Update hash: Remove the promoted piece from the to-square
-                currentHash ^= zobristTable[board[move.toRow][move.toCol]][move.toRow][move.toCol];
-
-                // Revert to pawn
-                board[move.toRow][move.toCol] = isWhiteTurn ? WPAWN : BPAWN;
-
-                // Update hash: Add the pawn back to the to-square
-                currentHash ^= zobristTable[board[move.toRow][move.toCol]][move.toRow][move.toCol];
+                // pieceThatMoved was the promoted piece. We XORed it out.
+                // Now, the pawn is back on fromRow.
+                // The original pawn (before promotion) needs to be XORed back in at fromRow.
+                // This is handled by step 6.
             } else if (move.isEnPassant) {
-                int capturedPawnRow = isWhiteTurn ? move.toRow - 1 : move.toRow + 1;
-                Piece capturedPawn = isWhiteTurn ? BPAWN : WPAWN;
-                board[capturedPawnRow][move.toCol] = capturedPawn;
+                // pieceThatMoved was the capturing pawn. It's now back on fromRow.
+                // The captured piece (move.capturedPiece) was EMPTY on toRow.
+                Piece actualCapturedPawn = (isWhiteTurn ? BPAWN : WPAWN); // Pawn that was captured
+                int capturedPawnActualRow = move.fromRow; // Same row as where capturing pawn moved from
+                int capturedPawnActualCol = move.toCol;   // Same col as where capturing pawn moved to
+                
+                board[capturedPawnActualRow][capturedPawnActualCol] = actualCapturedPawn; // Restore captured pawn
+                board[move.toRow][move.toCol] = EMPTY; // Clear the toSquare
 
-                // Update hash for the restored pawn
-                currentHash ^= zobristTable[capturedPawn][capturedPawnRow][move.toCol];
+                // Hash: XOR in the restored en-passant captured pawn
+                currentHash ^= zobristTable[actualCapturedPawn][capturedPawnActualRow][capturedPawnActualCol];
             } else if (move.isCastling) {
-                int rookFromCol = (move.toCol > move.fromCol) ? 7 : 0;
-                int rookToCol = (move.toCol > move.fromCol) ? 5 : 3;
+                // pieceThatMoved was the King. It's now back on fromRow.
+                // The rook also needs to be moved back and its hash updated.
+                Piece rookPieceType;
+                int rookOriginalCol, rookFinalCol;
 
-                // Move the rook back to its original position
-                Piece rook = board[move.toRow][rookToCol];
-                board[move.toRow][rookFromCol] = rook;
-                board[move.toRow][rookToCol] = EMPTY;
+                if (move.toCol > move.fromCol) { // Kingside castling (King moved to col 6, Rook to col 5 from 7)
+                    rookOriginalCol = 7; rookFinalCol = 5;
+                } else { // Queenside castling (King moved to col 2, Rook to col 3 from 0)
+                    rookOriginalCol = 0; rookFinalCol = 3;
+                }
+                rookPieceType = isWhiteTurn ? WROOK : BROOK; // Rook of the player whose turn it was
 
-                // Update hash for rook move
-                currentHash ^= zobristTable[rook][move.toRow][rookToCol];   // Remove rook from rookToCol
-                currentHash ^= zobristTable[rook][move.toRow][rookFromCol]; // Place rook back to rookFromCol
+                // Board update: Move rook back
+                board[move.fromRow][rookOriginalCol] = rookPieceType;
+                board[move.fromRow][rookFinalCol] = EMPTY;
+
+                // Hash: XOR out rook from its castled square, XOR in to original square
+                currentHash ^= zobristTable[rookPieceType][move.fromRow][rookFinalCol];
+                currentHash ^= zobristTable[rookPieceType][move.fromRow][rookOriginalCol];
             }
-            // Undo the move
-            Piece movedPiece = board[move.toRow][move.toCol];
+            
+            // --- RESTORE HASHING FOR OLD STATE OF MAKE MOVE (XORing in old state items) ---
+            // 4. Piece being moved back to its original square
+            currentHash ^= zobristTable[board[move.fromRow][move.fromCol]][move.fromRow][move.fromCol];
 
-            // Update hash: Remove the moved piece from the to-square
-            currentHash ^= zobristTable[movedPiece][move.toRow][move.toCol];
-
-            // Update hash: Place the moved piece back to the from-square
-            currentHash ^= zobristTable[movedPiece][move.fromRow][move.fromCol];
-
-            board[move.fromRow][move.fromCol] = movedPiece;
-
-            // Restore the captured piece (if any)
-            if (move.capturedPiece != EMPTY) {
-                board[move.toRow][move.toCol] = move.capturedPiece;
-
-                // Update hash for the restored captured piece
+            // 5. Captured piece (if it was a standard capture)
+            if (move.capturedPiece != EMPTY && !move.isEnPassant) {
                 currentHash ^= zobristTable[move.capturedPiece][move.toRow][move.toCol];
-            } else {
-                board[move.toRow][move.toCol] = EMPTY;
             }
+            
+            // 6. Old En Passant Square (restored enPassantCol)
+            if (enPassantCol != -1) {
+                currentHash ^= zobristEnPassant[enPassantCol];
+            }
+
+            // 7. Old Castling Rights (after flags are restored)
+            int castlingKeyBeforeMakeMove = getCastlingRightsKey();
+            currentHash ^= zobristCastlingRights[castlingKeyBeforeMakeMove];
+
+            // 8. Side to move is already handled.
+
+            // Restore captured piece from history (for other game logic if needed)
+            capturedPieces.pop_back();
         }
-
-
+// ...existing code...
         bool isInCheck() {
             int kingRow = -1, kingCol = -1;
             Piece kingPiece = isWhiteTurn ? WKING : BKING;
@@ -735,38 +963,14 @@
         bool isCheckmate() {
             if (!isInCheck()) return false;
             std::vector<Move> validMoves = generateValidMoves();
-            for(Move& move: validMoves){
-                makeMove(move);
-                // Check if the king is in check after the move
-                isWhiteTurn = !isWhiteTurn;
-                if (!isInCheck()) {
-                    isWhiteTurn = !isWhiteTurn;
-                    undoMove(move);
-                    return false;
-                }
-                isWhiteTurn = !isWhiteTurn;
-                undoMove(move);
-            }
-            return true;
+            return validMoves.empty();
         }
 
         bool isStalemate() {
             if (isInCheck()) return false;
 
             std::vector<Move> validMoves = generateValidMoves();
-            for(Move& move: validMoves){
-                makeMove(move);
-                // Check if the king is in check after the move
-                isWhiteTurn = !isWhiteTurn;
-                if (!isInCheck()) {
-                    isWhiteTurn = !isWhiteTurn;
-                    undoMove(move);
-                    return false;
-                }
-                isWhiteTurn = !isWhiteTurn;
-                undoMove(move);
-            }
-            return true;
+            return validMoves.empty();
         }
 
         int evaluateBoard() {
@@ -874,7 +1078,7 @@
 
         int scoreMove(Move& move) {
             int score = 0;
-            move.capturedPiece = move.isEnPassant ? BPAWN : board[move.toRow][move.toCol];
+            move.capturedPiece = move.isEnPassant ? (board[move.fromRow][move.toCol] == BPAWN ? BPAWN : WPAWN) : board[move.toRow][move.toCol];
             // Higher score for captures (MVV-LVA: Most Valuable Victim - Least Valuable Attacker)
             if (move.capturedPiece != EMPTY) {
                 int victimValue = getPieceValue(move.capturedPiece);
@@ -906,7 +1110,7 @@
                     if (board[fromRow][fromCol] != EMPTY && isWhiteTurn == (board[fromRow][fromCol] <= WKING)) {
                         for (int toRow = 0; toRow < 8; ++toRow) {
                             for (int toCol = 0; toCol < 8; ++toCol) {
-                                Move move = {fromRow, fromCol, toRow, toCol};
+                                    Move move = {fromRow, fromCol, toRow, toCol};
                                 if (isValidMove(move)) {
                                     // Assign heuristic score
                                     move.moveScore = scoreMove(move);
@@ -944,22 +1148,22 @@
 
                 lastInfoTime = now;
             }
-            if (transpositionTable.find(currentHash) != transpositionTable.end()) {
-                TTEntry& entry = transpositionTable[currentHash];
-                if (entry.depth >= depth) {
-                    if (entry.flag == TTEntry::EXACT) {
-                        return {entry.score, entry.bestMove};
-                    } else if (entry.flag == TTEntry::LOWERBOUND) {
-                        alpha = std::max(alpha, entry.score);
-                    } else if (entry.flag == TTEntry::UPPERBOUND) {
-                        beta = std::min(beta, entry.score);
-                    }
-                    if (alpha >= beta) {
-                        return {entry.score, entry.bestMove};
-                    }
-                }
-            }
-            if(isCheckmate()) return {20000 * (isMaximizing ? 1 : -1), Move()};
+            // if (transpositionTable.find(currentHash) != transpositionTable.end()) {
+            //     TTEntry& entry = transpositionTable[currentHash];
+            //     if (entry.depth >= depth) {
+            //         if (entry.flag == TTEntry::EXACT) {
+            //             return {entry.score, entry.bestMove};
+            //         } else if (entry.flag == TTEntry::LOWERBOUND) {
+            //             alpha = std::max(alpha, entry.score);
+            //         } else if (entry.flag == TTEntry::UPPERBOUND) {
+            //             beta = std::min(beta, entry.score);
+            //         }
+            //         if (alpha >= beta) {
+            //             return {entry.score, entry.bestMove};
+            //         }
+            //     }
+            // }
+            if(isCheckmate()) return {-20000, Move()};
             if(isStalemate()) return {0, Move()};
             if (depth == 0) {
                 return {(isMaximizing ? 1 : -1) * evaluateBoard(), Move()};  // Return the score and an empty move
@@ -1016,7 +1220,7 @@
 
 
         void aiMove() {
-            int depth = 5;  // Depth of the search, increase for stronger AI
+            int depth = 7;  // Depth of the search, increase for stronger AI
 
             // Replace structured binding with explicit pair
             std::pair<int, Move> result = negamax(depth, -10000, 10000, !userIsWhite);
@@ -1346,7 +1550,7 @@
                 }
             }
 
-            std::cout << "bestmove " << moveStr << std::endl;
+            std::cout << "bestmove " << moveStr << " "<< score << std::endl;
 
             // Apply the move to your internal board
             engine.makeMove(bestMove);

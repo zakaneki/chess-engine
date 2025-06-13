@@ -1,0 +1,14 @@
+# Compiled executable
+*.exe
+main.exe
+
+# Object files (if any are produced by a more complex build)
+*.o
+*.obj
+
+# User-specific VS Code settings (optional, if you don't want to commit them)
+# .vscode/settings.json
+# .vscode/launch.json
+# .vscode/tasks.json
+# If you want to ignore the entire .vscode folder, uncomment the line below
+.vscode/
